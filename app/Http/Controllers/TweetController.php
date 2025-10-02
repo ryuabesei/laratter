@@ -28,15 +28,36 @@ class TweetController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
-        $request->validate([
-            'tweet' => 'required|max:255',
-        ]);
-        $request->user()->tweets()->create($request->only('tweet'));
-        return redirect()->route('tweets.index');
-        }
+public function store(Request $request)
+{
+    // バリデーション（tweet 本文 + メディア）
+    $request->validate([
+        'tweet' => 'required|max:255',
+        'media' => 'nullable|file|max:20480|mimetypes:image/jpeg,image/png,video/mp4,video/quicktime',
+    ]);
+
+    $path = null;
+    $type = null;
+
+    // ファイルがアップロードされている場合の処理
+    if ($request->hasFile('media')) {
+        $file = $request->file('media');
+        $path = $file->store('tweets','public');  // storage/app/public/tweets に保存
+        $mime = $file->getMimeType();
+        $type = str_starts_with($mime, 'image/') ? 'image' : 'video';
+    }
+
+    // Tweet を保存（fillable を使わずに個別代入）
+    $tweet = new \App\Models\Tweet();
+    $tweet->user_id = $request->user()->id;   // 投稿者
+    $tweet->tweet = $request->tweet;          // 本文
+    $tweet->media_path = $path;               // ファイルパス
+    $tweet->media_type = $type;               // 種別（image / video）
+    $tweet->save();
+
+    return redirect()->route('tweets.index');
+}
+
     /**
      * Display the specified resource.
      */

@@ -14,8 +14,19 @@
                     <p class="text-gray-800 dark:text-gray-300">{{ $tweet->tweet }}</p>
                     <a href="{{ route('profile.show', $tweet->user) }}">
                         <p class="text-gray-600 dark:text-gray-400 text-sm">投稿者: {{ $tweet->user->name }}</p>
-                    <a href="{{ route('tweets.show', $tweet) }}" class="text-blue-500 hover:text-blue-700">詳細を見る
                     </a>
+                    <a href="{{ route('tweets.show', $tweet) }}" class="text-blue-500 hover:text-blue-700">詳細を見る</a>
+                    @if ($tweet->media_path)
+                        @php
+                            $url = Storage::url($tweet->media_path);
+                        @endphp
+
+                        @if ($tweet->media_type === 'image')
+                            <img src="{{ $url }}" class="mt-2 max-w-xs rounded" alt="image">
+                        @elseif ($tweet->media_type === 'video')
+                            <video src="{{ $url }}" controls class="mt-2 max-w-xs rounded"></video>
+                        @endif
+                    @endif
                     <div class="flex">
                         @if ($tweet->liked->contains(auth()->id()))
                         <form action="{{ route('tweets.dislike', $tweet) }}" method="POST">
